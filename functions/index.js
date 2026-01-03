@@ -16,6 +16,7 @@ exports.onActivityCreated = functions.firestore
       activityId,
       userId: activity.userId,
       sustainabilityScore: score,
+      status: "completed",
       processedAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
