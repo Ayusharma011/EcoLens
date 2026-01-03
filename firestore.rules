@@ -12,8 +12,8 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
-    match /analysisResults/{resultId} {
-      allow read: if request.auth != null;
+    match /analysisResults/{docId} {
+      allow read: if request.auth != null && request.auth.uid == resource.data.userId;
       allow write: if false;
     }
   }
