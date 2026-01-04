@@ -49,6 +49,16 @@ function App() {
           <p style={{ color: "green", marginTop: "10px" }}>
           🎉 You earned 10 Green Points!
           </p>
+          )}
+
+          {result?.recyclable && (
+          <div>
+            <h3>Nearby Recycling Centers</h3>
+            <ul>
+              <li>Green Recycle Hub</li>
+              <li>Eco Drop Center</li>
+            </ul>
+          </div>
         )}
         </div>
       )}
