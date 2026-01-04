@@ -1,6 +1,9 @@
 const { onCall } = require("firebase-functions/v2/https");
 const { initializeApp } = require("firebase-admin/app");
 const { getFirestore, FieldValue } = require("firebase-admin/firestore");
+const { GoogleGenerativeAI } = require("@google/generative-ai");
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+
 
 initializeApp();
 const db = getFirestore();
@@ -13,12 +16,30 @@ exports.createScan = onCall(async (request) => {
   const { imageUrl } = request.data;
   const uid = request.auth.uid;
 
-  //Ai which will give here.
-  const mockResult = {
+
+  let aiResult;
+  try {
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+  const prompt = `
+  Identify the waste material from this image.
+  Respond strictly in JSON with:
+  material, recyclable (true/false), instruction
+  `;
+
+  const result = await model.generateContent([
+    prompt,
+    { inlineData: { mimeType: "image/jpeg", data: imageBase64 } }
+  ]);
+
+  aiResult = JSON.parse(result.response.text());
+} catch (err) {
+  aiResult = {
     material: "Plastic",
     recyclable: true,
-    instruction: "Rinse the plastic bottle and place it in dry waste."
+    instruction: "Rinse and place in dry waste"
   };
+}
 
   const scanDoc = {
     userId: uid,
