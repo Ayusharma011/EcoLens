@@ -11,6 +11,7 @@ import { functions } from "./firebase";
 function App() {
 
   const [user, setUser] = useState(null);
+  const [result, setResult] = useState(null);
 
   useEffect(() => {
   const unsub = onAuthStateChanged(auth, (currentUser) => {
@@ -22,23 +23,13 @@ function App() {
   }, []);
 
   const testScan = async () => {
-  if (!user) {
-    alert("User not logged in yet");
-    return;
-  }
+  const createScan = httpsCallable(functions, "createScan");
+  const res = await createScan({
+    imageUrl: "https://example.com/bottle.jpg"
+  });
+  setResult(res.data);
+};
 
-  try {
-    const createScan = httpsCallable(functions, "createScan");
-
-    const result = await createScan({
-      imageUrl: "https://example.com/garbage.jpg"
-    });
-
-    console.log("Scan result:", result.data);
-  } catch (err) {
-    console.error("Scan failed:", err);
-  }
-  };
 
   return (
     <>
@@ -48,6 +39,19 @@ function App() {
       <button onClick={testScan} disabled={!user}>
       Test Scan
       </button>
+      {result && (
+        <div>
+          <p>Material: {result.material}</p>
+          <p>Recyclable: {result.recyclable ? "Yes" : "No"}</p>
+          <p>How to recycle: {result.instruction}</p>
+
+          {result.recyclable && (
+          <p style={{ color: "green", marginTop: "10px" }}>
+          🎉 You earned 10 Green Points!
+          </p>
+        )}
+        </div>
+      )}
     </>
   )
 }
