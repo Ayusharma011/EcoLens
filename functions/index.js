@@ -1,24 +1,35 @@
-const functions = require("firebase-functions");
-const admin = require("firebase-admin");
+const { onCall } = require("firebase-functions/v2/https");
+const { initializeApp } = require("firebase-admin/app");
+const { getFirestore, FieldValue } = require("firebase-admin/firestore");
 
-admin.initializeApp();
-const db = admin.firestore();
+initializeApp();
+const db = getFirestore();
 
-exports.onActivityCreated = functions.firestore
-  .document("activities/{activityId}")
-  .onCreate(async (snap, context) => {
-    const activity = snap.data();
-    const activityId = context.params.activityId;
+exports.createScan = onCall(
+  { region: "us-central1" },
+  async (request) => {
+    if (!request.auth) {
+      throw new Error("User must be logged in");
+    }
 
-    const score = Math.floor(Math.random() * 40) + 60;
+    const { imageUrl } = request.data;
 
-    await db.collection("analysisResults").doc(activityId).set({
-      activityId,
-      userId: activity.userId,
-      sustainabilityScore: score,
-      status: "completed",
-      processedAt: admin.firestore.FieldValue.serverTimestamp(),
+    const mockResult = {
+      wasteType: "Plastic",
+      recyclable: true,
+      aiConfidence: 0.93,
+    };
+
+    const scanRef = await db.collection("scans").add({
+      uid: request.auth.uid,
+      imageUrl,
+      ...mockResult,
+      createdAt: FieldValue.serverTimestamp(),
     });
 
-    console.log("Analysis completed for", activityId);
-  });
+    return {
+      scanId: scanRef.id,
+      ...mockResult,
+    };
+  }
+);
